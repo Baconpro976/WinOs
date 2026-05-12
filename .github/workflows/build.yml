@@ -1,0 +1,70 @@
+name: Build WinOs ISO
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    permissions:
+      contents: write
+
+    steps:
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Free Disk Space
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/lib/android
+        sudo docker image prune --all --force
+
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+
+        sudo apt install -y \
+          live-build \
+          debootstrap \
+          squashfs-tools \
+          xorriso \
+          grub-pc-bin \
+          grub-efi-amd64-bin \
+          mtools \
+          dosfstools \
+          wget \
+          curl \
+          unzip \
+          git \
+          rsync \
+          ca-certificates
+
+    - name: Make Script Executable
+      run: chmod +x build.sh
+
+    - name: Build WinOs ISO
+      run: sudo ./build.sh
+
+    - name: Upload ISO Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: WinOs-v1
+        path: |
+          /root/winos-build/live-build/*.iso
+          /home/runner/winos-build/live-build/*.iso
+        retention-days: 7
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      if: success()
+      with:
+        tag_name: winos-v1
+        name: WinOs v1
+        files: |
+          /root/winos-build/live-build/*.iso
+          /home/runner/winos-build/live-build/*.iso
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
