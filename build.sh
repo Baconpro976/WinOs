@@ -1,20 +1,20 @@
 #!/bin/bash
 set -e
 
-# Çalışma dizinini temizle
-sudo rm -rf live-build
-mkdir -p live-build && cd live-build
+# Live-build'i sıfırdan ve temiz kur
+sudo apt-get install -y live-build
+lb clean --all
 
-# En temel yapılandırma
-sudo lb config \
+# Yapılandırma - En garanti ayarlar
+lb config \
   --architectures amd64 \
-  --bootstrap copy \
-  --archive-areas "main contrib non-free non-free-firmware" \
-  --binary-images iso-hybrid
+  --distribution bookworm \
+  --binary-images iso-hybrid \
+  --archive-areas "main contrib non-free non-free-firmware"
 
-# Gerekli paketleri ekle
+# Basit bir XFCE masaüstü ekle
 mkdir -p config/package-lists
-echo "xfce4 xfce4-goodies lightdm firefox-esr sudo" > config/package-lists/my.list.chroot
+echo "xfce4 lightdm firefox-esr" > config/package-lists/desktop.list.chroot
 
-# ISO'yu inşa et
+# ISO'yu pişir
 sudo lb build
