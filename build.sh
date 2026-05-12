@@ -1,54 +1,20 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Değişkenler
-ISO_NAME="WinOs-v1"
-WORKDIR="$HOME/winos-build"
-LIVE_DIR="$WORKDIR/live-build"
-
-# Hazırlık
-mkdir -p "$LIVE_DIR"
-cd "$LIVE_DIR"
-
-# Yapılandırma
-lb config \
-  --architectures amd64 \
-  --distribution bookworm \
-  --archive-areas "main contrib non-free non-free-firmware" \
-  --binary-images iso-hybrid \
-  --bootappend-live "boot=live components quiet splash"
-
-# Paket Listesi (WinOs İçin Gerekli Her Şey)
-mkdir -p config/package-lists
-cat > config/package-lists/winos.list.chroot << 'EOF'
-xfce4 xfce4-goodies lightdm lightdm-gtk-greeter
-pipewire pipewire-pulse wireplumber alsa-utils pavucontrol
-network-manager-gnome firefox-esr thunar gparted
-firmware-linux firmware-linux-nonfree firmware-iwlwifi firmware-realtek
-sudo git unzip wget curl
-EOF
-
-# Windows 11 Tema ve İkon Kurulumu
-mkdir -p config/hooks/live
-cat > config/hooks/live/0100-theme.hook.chroot << 'EOF'
 #!/bin/bash
 set -e
-mkdir -p /usr/share/themes /usr/share/icons
-cd /tmp
-# Tema Dosyaları
-wget -O win11-theme.zip https://github.com/B00merang-Project/Windows-11/archive/refs/heads/master.zip
-unzip win11-theme.zip
-cp -r Windows-11-master /usr/share/themes/Windows-11
-# İkon Dosyaları
-wget -O win11-icons.zip https://github.com/yeyushengfan258/Win11-icon-theme/archive/refs/heads/main.zip
-unzip win11-icons.zip
-cp -r Win11-icon-theme-main /usr/share/icons/Win11
-EOF
-chmod +x config/hooks/live/0100-theme.hook.chroot
 
-# ISO Oluşturma Başlat
-lb build
+# Çalışma dizinini temizle
+sudo rm -rf live-build
+mkdir -p live-build && cd live-build
 
-# Dosya Adını Düzenle
-ISO=$(find . -name "*.iso" | head -n1)
-mv "$ISO" "${ISO_NAME}.iso"
+# En temel yapılandırma
+sudo lb config \
+  --architectures amd64 \
+  --bootstrap copy \
+  --archive-areas "main contrib non-free non-free-firmware" \
+  --binary-images iso-hybrid
+
+# Gerekli paketleri ekle
+mkdir -p config/package-lists
+echo "xfce4 xfce4-goodies lightdm firefox-esr sudo" > config/package-lists/my.list.chroot
+
+# ISO'yu inşa et
+sudo lb build
