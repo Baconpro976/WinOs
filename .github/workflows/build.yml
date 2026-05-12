@@ -1,27 +1,14 @@
 name: Build WinOs ISO
 on:
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-
-    - name: Install Dependencies
+    - uses: actions/checkout@v4
+    - name: Build
       run: |
         sudo apt update
-        sudo apt install -y live-build debootstrap squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin mtools dosfstools wget curl unzip git rsync ca-certificates
-
-    - name: Build WinOs ISO
-      run: |
-        # Script'in ana dizinde olduğundan emin oluyoruz
+        sudo apt install -y live-build debootstrap squashfs-tools xorriso grub-pc-bin grub-efi-amd64-bin mtools dosfstools wget curl unzip git
         chmod +x build.sh
-        sudo bash ./build.sh
-
-    - name: Upload ISO Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: WinOs-v1
-        path: "*.iso" # Herhangi bir klasördeki ISO dosyasını bulur
+        sudo ./build.sh
